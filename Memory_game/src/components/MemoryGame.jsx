@@ -8,28 +8,20 @@ export default class Game extends Component {
     isClick: [],
     isNewGame: false,
     cardNums: [],
-    visibility: [
-      "visible",
-      "visible",
-      "visible",
-      "visible",
-      "visible",
-      "visible",
-    ],
+    visibility: [],
     clockTimer: null,
     playerMoves: 0,
     isGameOver: false,
+    pointerEvents: "auto",
   };
 
-  isTwoCardPicked = 0;
   firstCard = null;
   firstCardIndex = null;
   SetTimeoutId = null;
   setIntervalId = null;
   gameOverCount = null;
 
-  clickHandler = (card, i) => {
-    //....
+  clickHandler = (i) => {
     const tempIsClick = { ...this.state.isClick };
     tempIsClick[i] = true;
     this.setState({ isClick: tempIsClick });
@@ -39,51 +31,71 @@ export default class Game extends Component {
       this.firstCard = this.state.cardNums[i];
       this.firstCardIndex = i;
     } else {
-      this.setState({ playerMoves: this.state.playerMoves + 1 });
-
-      if (
-        this.firstCard == this.state.cardNums[i] &&
-        this.firstCardIndex != i
-      ) {
-        console.log("match");
-        const visibility = { ...this.state.visibility };
-        visibility[i] = "hidden";
-        visibility[this.firstCardIndex] = "hidden";
-        this.setState({ visibility: visibility });
-        this.gameOverCount--;
-        if (this.gameOverCount == 0) {
-          console.log("game over");
-          clearInterval(this.setIntervalId);
-          this.setState({ isGameOver: true });
-        }
+      if (this.firstCardIndex == i) {
+        return;
       }
+      this.cardsMatch(i);
+      this.setState({ playerMoves: this.state.playerMoves + 1 });
       this.firstCard = null;
 
-      setTimeout(() => {
-        const tempIsClick = { ...this.state.isClick };
-        tempIsClick[i] = false;
-        tempIsClick[this.firstCardIndex] = false;
-        this.setState({ isClick: tempIsClick });
-      }, 1000);
+      this.cardsUpsideDown(i)
     }
   };
 
-  timer = () => {
-    this.setIntervalId = setInterval(() => {
-      this.setState({ clockTimer: this.state.clockTimer + 1 });
+  cardsUpsideDown = (i) => {
+    this.setState({ pointerEvents: "none" });
+    setTimeout(() => {
+      const tempIsClick = { ...this.state.isClick };
+      tempIsClick[i] = false;
+      tempIsClick[this.firstCardIndex] = false;
+      this.setState({ isClick: tempIsClick });
+      this.setState({ pointerEvents: "auto" });
     }, 1000);
   };
 
-  shuffleArray = () => {};
+  cardsMatch = (i) => {
+    if (this.firstCard == this.state.cardNums[i]) {
+      const visibility = { ...this.state.visibility };
+      visibility[i] = "hidden";
+      visibility[this.firstCardIndex] = "hidden";
+
+      this.setState({ pointerEvents: "none" });
+      setTimeout(() => {
+        this.setState({ visibility: visibility });
+        this.setState({ pointerEvents: "auto" });
+      }, 500);
+
+      this.gameOverCount--;
+      if (this.gameOverCount == 0) {
+        console.log("game over");
+        clearInterval(this.setIntervalId);
+        setTimeout(() => {
+          this.setState({ isGameOver: true });
+        }, 500);
+      }
+    }
+  };
 
   startGame = () => {
-    const isClickArray = Array(6).fill(false);
-    const visibilityArray = Array(6).fill("visible");
+    const isClickArray = Array(8).fill(false);
+    const visibilityArray = Array(8).fill("visible");
     this.setState({ isNewGame: true });
     this.setState({ isClick: isClickArray });
     this.setState({ visibility: visibilityArray });
 
-    const allCards = [1, 2, 3];
+    this.shuffleArray();
+
+    clearInterval(this.setIntervalId);
+    this.setState({ isGameOver: false });
+    this.setState({ playerMoves: 0 });
+    this.setState({ clockTimer: null });
+
+    this.timer();
+  };
+
+  shuffleArray = () => {
+    const allCards = [1, 2, 3, 4];
+
     const cardBoard = Array(2)
       .fill([...allCards])
       .reduce((a, b) => a.concat(b));
@@ -95,35 +107,37 @@ export default class Game extends Component {
     this.gameOverCount = allCards.length;
 
     this.setState({ cardNums: cardBoard });
+  };
 
-    clearInterval(this.setIntervalId);
-    this.setState({ isGameOver: false });
-    this.setState({ playerMoves: 0 });
-    this.setState({ clockTimer: null });
-    this.timer();
+  timer = () => {
+    this.setIntervalId = setInterval(() => {
+      this.setState({ clockTimer: this.state.clockTimer + 1 });
+    }, 1000);
   };
 
   render() {
     return (
-      <div>
+      <div className="gameContainer">
+        <h1> memory Game</h1>
+        <br />
         <Board
           cardNums={this.state.cardNums}
           visibility={this.state.visibility}
           isClick={this.state.isClick}
+          pointerEvents={this.state.pointerEvents}
           clickHandler={this.clickHandler}
-
         />
-
-        <button className="startBtn" onClick={this.startGame}>
-          Start Game
-        </button>
-
+        <br />
         <Message
           isNewGame={this.state.isNewGame}
           clockTimer={this.state.clockTimer}
           playerMoves={this.state.playerMoves}
           isGameOver={this.state.isGameOver}
         />
+        <br />
+        <button className="startBtn" onClick={this.startGame}>
+          Start Game
+        </button>
       </div>
     );
   }

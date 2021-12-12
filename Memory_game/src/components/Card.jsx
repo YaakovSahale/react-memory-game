@@ -1,14 +1,16 @@
-export default function Card({ visibility, isClick, clickHandler, card, i }) {
+export default function Card({ visibility, isClick, clickHandler, card, i,pointerEvents }) {
   return (
     <div
       className="card"
       style={{
         visibility: visibility[i],
-        backgroundColor: "blueviolet",
+        pointerEvents: pointerEvents
+        
       }}
-      onClick={() => clickHandler(card, i)}
+      onClick={() => clickHandler(i)}
     >
-      {isClick[i] ? card : null}
+      <div>{isClick[i] ? card : null}</div>
+      
     </div>
   );
 }
